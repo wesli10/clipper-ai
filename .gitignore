@@ -1,0 +1,27 @@
+workspace/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+.coverage
+fila.txt
+PUBLICAR.md
+# backups locais dos cards antes do corte
+assets/original/
+
+# artefato do Windows ao copiar arquivos para o WSL
+*:Zone.Identifier
+
+# espelho de workspace para ensaio do agent (SPEC-agent 13, fase B)
+workspace-ensaio/
+config-ensaio.yaml
+
+# resultados de eval sao dados de execucao, nao codigo. Ancorado na raiz: sem a
+# barra inicial a regra tambem casava src/clipper/evals/, que e codigo, e seis
+# arquivos do projeto ficaram fora do repositorio sem ninguem notar.
+/evals/

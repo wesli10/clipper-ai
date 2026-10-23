@@ -1,0 +1,1574 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clipper · acompanhar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ccircle cx='16' cy='16' r='7' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --card-2: #f8fafc;
+  --line: #e2e8f0;
+  --text: #12213a;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --ok: #15a34a;
+  --ok-soft: #e7f7ed;
+  --busy: #e08600;
+  --busy-soft: #fdf3e0;
+  --bad: #dc2626;
+  --bad-soft: #fdeceb;
+  --accent: #2563eb;
+  --accent-soft: #e8effd;
+  --shadow: 0 1px 2px rgba(15,32,64,.06), 0 6px 20px rgba(15,32,64,.05);
+}
+html[data-theme="dark"] {
+  --bg: #0e1420;
+  --card: #161e2d;
+  --card-2: #1b2537;
+  --line: #26324a;
+  --text: #e8eefb;
+  --muted: #9aa8c0;
+  --faint: #6d7c96;
+  --ok: #4ade80;
+  --ok-soft: #16301f;
+  --busy: #fbbf24;
+  --busy-soft: #33270d;
+  --bad: #f87171;
+  --bad-soft: #34181a;
+  --accent: #7aa8ff;
+  --accent-soft: #1a2740;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.55 ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { margin: 0; line-height: 1.25; }
+button { font: inherit; }
+
+/* cabeçalho */
+.top {
+  position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 16px;
+  padding: 14px 28px; background: var(--card); border-bottom: 1px solid var(--line);
+}
+.logo { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); display: grid; place-items: center; color: #fff; font-weight: 800; }
+.brand h1 { font-size: 19px; font-weight: 700; letter-spacing: -.2px; }
+.brand p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.top .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 9px; padding: 8px 16px; border-radius: 999px;
+  font-size: 15px; font-weight: 600; background: var(--card-2); border: 1px solid var(--line); color: var(--muted);
+}
+.pill.on { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.pill.off { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
+.blip { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.pill.on .blip { animation: beat 1.8s ease-in-out infinite; }
+@keyframes beat { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
+.switch { display: flex; background: var(--card-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.switch button {
+  border: 0; background: transparent; color: var(--muted); padding: 6px 15px; border-radius: 999px;
+  cursor: pointer; font-size: 14.5px; font-weight: 600;
+}
+.switch button.on { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+.icon-btn {
+  border: 1px solid var(--line); background: var(--card-2); color: var(--muted); width: 40px; height: 40px;
+  border-radius: 10px; cursor: pointer; display: grid; place-items: center; font-size: 17px;
+}
+
+main { max-width: 1280px; margin: 0 auto; padding: 26px 28px 80px; display: flex; flex-direction: column; gap: 26px; }
+section > h2 {
+  font-size: 15px; text-transform: uppercase; letter-spacing: .8px; color: var(--faint);
+  font-weight: 700; margin-bottom: 12px;
+}
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+
+/* agora */
+.now { padding: 24px 26px; display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+.now .what { flex: 1 1 340px; min-width: 280px; }
+.now .eyebrow { font-size: 14px; color: var(--muted); font-weight: 600; }
+.now h2.headline { font-size: 27px; font-weight: 700; letter-spacing: -.4px; margin: 4px 0 6px; }
+.now .sub { font-size: 16.5px; color: var(--muted); }
+.now .side { display: flex; gap: 26px; }
+.figure { text-align: center; min-width: 92px; }
+.figure b { display: block; font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+.figure span { font-size: 13.5px; color: var(--muted); }
+.bar { height: 10px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line); overflow: hidden; margin-top: 16px; }
+.bar i { display: block; height: 100%; background: var(--ok); transition: width .6s ease; }
+.bar.busy i { background: var(--busy); }
+
+/* jornada */
+.journey { padding: 26px 22px 20px; overflow-x: auto; }
+.stops { display: flex; align-items: flex-start; min-width: 860px; }
+.stop { flex: 1; text-align: center; position: relative; }
+.stop .bubble {
+  width: 60px; height: 60px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center;
+  background: var(--card-2); border: 2px solid var(--line); color: var(--faint); transition: all .3s ease;
+}
+.stop.done .bubble { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.stop.busy .bubble { background: var(--busy-soft); border-color: var(--busy); color: var(--busy); animation: halo 1.8s ease-out infinite; }
+.stop.bad .bubble { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+@keyframes halo {
+  0% { box-shadow: 0 0 0 0 rgba(224,134,0,.35); }
+  70% { box-shadow: 0 0 0 14px rgba(224,134,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(224,134,0,0); }
+}
+.stop .name { margin-top: 10px; font-size: 15.5px; font-weight: 600; }
+.stop .count { font-size: 13.5px; color: var(--muted); min-height: 20px; }
+.stop .link { position: absolute; top: 30px; left: calc(50% + 38px); right: calc(-50% + 38px); height: 3px; background: var(--line); border-radius: 2px; }
+.stop.done .link { background: var(--ok); }
+.stop.busy .link { background: linear-gradient(90deg, var(--busy) 45%, transparent 0) repeat-x; background-size: 14px 3px; animation: walk .7s linear infinite; }
+@keyframes walk { to { background-position: 14px 0; } }
+.stop:last-child .link { display: none; }
+
+/* vídeos */
+.videos { display: flex; flex-direction: column; gap: 14px; }
+.vrow { padding: 18px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.vrow .vinfo { flex: 1 1 300px; min-width: 240px; }
+.vrow h3 { font-size: 18px; font-weight: 650; letter-spacing: -.2px; }
+.vrow .vsub { font-size: 14.5px; color: var(--muted); margin-top: 2px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; background: var(--card-2); color: var(--muted);
+}
+.tag.ok { background: var(--ok-soft); color: var(--ok); }
+.tag.busy { background: var(--busy-soft); color: var(--busy); }
+.tag.bad { background: var(--bad-soft); color: var(--bad); }
+.tag.soft { background: var(--accent-soft); color: var(--accent); }
+.tag.held { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+.mini { display: flex; gap: 6px; align-items: center; }
+.mini i { width: 26px; height: 6px; border-radius: 3px; background: var(--line); display: block; }
+.mini i.done { background: var(--ok); }
+.mini i.busy { background: var(--busy); animation: fade 1.3s ease-in-out infinite; }
+.mini i.bad { background: var(--bad); }
+.mini i.held { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 8px); }
+@keyframes fade { 50% { opacity: .35; } }
+
+/* cortes */
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tabs button {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px;
+  padding: 8px 18px; cursor: pointer; font-size: 15px; font-weight: 600;
+}
+.tabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hint { margin: -4px 0 14px; font-size: 14.5px; color: var(--muted); }
+.more {
+  display: none; margin: 18px auto 0; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); border-radius: 999px; padding: 11px 26px; cursor: pointer;
+  font-size: 15px; font-weight: 600; box-shadow: var(--shadow);
+}
+.more:hover { border-color: var(--accent); color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 18px; align-items: start; }
+.clip { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: var(--shadow); transition: transform .16s ease, box-shadow .16s ease; }
+.clip:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(15,32,64,.12); }
+.shot {
+  position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--card-2);
+  display: grid; place-items: center; color: var(--faint); font-size: 14px;
+}
+/* o quadro inteiro do corte cabe na caixa; o fundo desfocado preenche o resto,
+   então short em pé e long deitado ocupam exatamente o mesmo cartão */
+.shot .haze { position: absolute; inset: -10%; background: center/cover no-repeat; filter: blur(20px) brightness(.7) saturate(1.15); }
+.shot img { position: relative; max-width: 100%; max-height: 100%; display: block; }
+.shot.waiting { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .55; } }
+.shot .play {
+  position: absolute; inset: auto 12px 12px auto; width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(10,20,35,.62); color: #fff; display: grid; place-items: center; font-size: 15px;
+}
+.clip .txt { padding: 14px 15px 16px; display: flex; flex-direction: column; gap: 9px; }
+.clip h3 {
+  font-size: 16px; font-weight: 650; line-height: 1.35;
+  /* duas linhas sempre, cheias ou não: é o título que decidia a altura do cartão */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden; height: 2.7em;
+}
+.clip .line { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.dotmark { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+
+/* fila */
+.qlist { display: flex; flex-direction: column; gap: 10px; }
+.qrow { display: flex; align-items: center; gap: 14px; padding: 14px 20px; }
+.qrow .num { width: 30px; height: 30px; border-radius: 50%; background: var(--card-2); color: var(--muted); display: grid; place-items: center; font-size: 14px; font-weight: 700; flex: none; }
+.qrow .qtxt { flex: 1; min-width: 0; }
+.qrow .qtxt b { font-weight: 600; font-size: 16px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qrow .qtxt span { font-size: 13.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+
+/* ações que escrevem (SPEC-agent 9.5) */
+.acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.act {
+  border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px;
+  padding: 7px 16px; cursor: pointer; font-size: 14.5px; font-weight: 600;
+}
+.act:hover { border-color: var(--accent); color: var(--accent); }
+.act.danger:hover { border-color: var(--bad); color: var(--bad); }
+.act.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.act[disabled] { opacity: .5; cursor: default; }
+.act.tiny { padding: 4px 11px; font-size: 13px; }
+.qedit { display: flex; gap: 8px; margin-top: 12px; }
+.qedit input {
+  flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px;
+  background: var(--card); color: var(--text); font: inherit; font-size: 14.5px;
+}
+.chan { display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; }
+.chan textarea {
+  width: 100%; min-height: 300px; border: 1px solid var(--line); border-radius: 12px;
+  padding: 13px 15px; background: var(--card-2); color: var(--text);
+  font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical;
+}
+.chan .note { font-size: 14px; color: var(--muted); }
+.said-ok { color: var(--ok); font-size: 14px; }
+.said-bad { color: var(--bad); font-size: 14px; }
+
+/* sessão do agent */
+.agent { padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+.agent .head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.agent .head b { font-size: 17px; font-weight: 650; }
+.agent .head .meta { font-size: 14px; color: var(--muted); }
+.budget { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 20px; }
+.budget .item { display: flex; flex-direction: column; gap: 5px; }
+.budget .item .top { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--muted); padding: 0; background: none; border: 0; position: static; }
+.budget .item .track { height: 7px; border-radius: 999px; background: var(--card-2); overflow: hidden; }
+.budget .item .track i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.budget .item.warn .track i { background: var(--busy); }
+.budget .item.over .track i { background: var(--bad); }
+.agent .doing { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 13px; background: var(--accent-soft); font-size: 15px; }
+.agent .doing .spin { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: breathe 1.6s ease-in-out infinite; flex: none; }
+.agent .said { font-size: 15px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 14px; white-space: pre-wrap; }
+.aclips { display: flex; flex-direction: column; gap: 8px; }
+.aclip { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14.5px; flex-wrap: wrap; }
+.aclip b { font-weight: 650; }
+.aclip .grow { flex: 1; min-width: 120px; }
+.trail { display: flex; flex-direction: column; gap: 0; font-size: 14.5px; }
+.trail .row { display: flex; gap: 12px; align-items: baseline; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+.trail .row:last-child { border-bottom: 0; }
+.trail .row.bad { color: var(--bad); }
+.trail .row .tool { font-weight: 650; min-width: 132px; }
+.trail .row .what { flex: 1; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trail .row .took { color: var(--faint); font-size: 13.5px; white-space: nowrap; }
+.checks { display: flex; flex-direction: column; gap: 7px; font-size: 14px; }
+.checks .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.moves { font-size: 14.5px; color: var(--muted); display: flex; flex-direction: column; gap: 7px; }
+.sub-title { font-size: 13.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+/* detalhes */
+.detail-only { display: none; }
+body.detailed .detail-only { display: block; }
+body.detailed .detail-only.flex { display: flex; }
+.lanes { padding: 18px 20px; overflow-x: auto; }
+.lane { display: flex; align-items: center; gap: 0; margin-bottom: 10px; }
+.lane:last-child { margin-bottom: 0; }
+.lane .label { min-width: 78px; font-size: 13.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.cell { min-width: 138px; border: 1px solid var(--line); border-radius: 11px; padding: 9px 11px; background: var(--card-2); }
+.cell .cname { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.cell .cinfo { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.cell.done { border-color: var(--ok); background: var(--ok-soft); }
+.cell.running { border-color: var(--busy); background: var(--busy-soft); }
+.cell.failed { border-color: var(--bad); background: var(--bad-soft); }
+.cell.parado { border-style: dashed; border-color: var(--muted); }
+/* notas dos cortes (eval) */
+.ev-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.ev-head .acts { margin: 0; }
+.ev { display: flex; gap: 14px; padding: 14px 16px; align-items: flex-start; flex-wrap: wrap; }
+.ev + .ev { border-top: 1px solid var(--line); }
+.ev .shot {
+  width: 78px; height: 104px; flex: none; border-radius: 10px; object-fit: cover;
+  background: var(--card-2); border: 1px solid var(--line); cursor: pointer;
+}
+.ev .evbody { flex: 1 1 260px; min-width: 220px; }
+.ev .evtitle { font-size: 15.5px; font-weight: 600; cursor: pointer; }
+.ev .evsub { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+.stars { display: flex; gap: 6px; margin: 9px 0 8px; flex-wrap: wrap; align-items: center; }
+.stars button {
+  width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--card-2); color: var(--muted); font-size: 15px; font-weight: 650; cursor: pointer;
+}
+.stars button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.stars .clear { width: auto; padding: 0 11px; font-weight: 500; font-size: 13.5px; }
+.ev input.evc {
+  width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--card); color: var(--fg); font-size: 14.5px; font-family: inherit;
+}
+.ev video { width: 100%; max-width: 320px; border-radius: 12px; margin-top: 10px; display: block; }
+.arrow { width: 26px; height: 2px; background: var(--line); position: relative; flex: none; }
+.arrow::after { content: ""; position: absolute; right: 0; top: -3px; border: 4px solid transparent; border-left-color: var(--line); }
+pre.log {
+  margin: 0; max-height: 240px; overflow: auto; padding: 16px 18px; border-radius: 14px;
+  background: var(--card-2); border: 1px solid var(--line); color: var(--muted);
+  font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word;
+}
+.empty { padding: 26px; text-align: center; color: var(--muted); font-size: 16px; }
+.empty b { display: block; font-size: 18px; color: var(--text); margin-bottom: 6px; }
+
+/* janela do corte */
+.modal { position: fixed; inset: 0; background: rgba(12,20,34,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 24px; z-index: 60; }
+.modal.hidden { display: none; }
+.sheet { background: var(--card); border-radius: 18px; width: min(900px, 100%); max-height: 88vh; overflow: auto; box-shadow: 0 24px 60px rgba(8,16,30,.35); }
+.sheet .head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 22px 14px; }
+.sheet .head h3 { font-size: 21px; font-weight: 700; letter-spacing: -.3px; }
+.sheet .head .close { margin-left: auto; cursor: pointer; border: 1px solid var(--line); background: var(--card-2); border-radius: 10px; padding: 7px 14px; color: var(--muted); font-size: 15px; }
+.sheet .body { padding: 0 22px 22px; display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 22px; }
+.sheet video { width: 100%; border-radius: 12px; background: #000; }
+.facts { display: flex; flex-direction: column; gap: 12px; }
+.fact { display: flex; gap: 12px; align-items: baseline; }
+.fact dt { min-width: 96px; color: var(--muted); font-size: 14.5px; }
+.fact dd { margin: 0; font-size: 15.5px; }
+@media (max-width: 720px) {
+  main { padding: 20px 16px 60px; }
+  .top { padding: 12px 16px; flex-wrap: wrap; }
+  .sheet .body { grid-template-columns: 1fr; }
+  .now h2.headline { font-size: 22px; }
+}
+
+/* chamada da revisão */
+.call {
+  padding: 22px 26px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  border: 2px solid var(--busy); background: var(--busy-soft);
+}
+.call .txt { flex: 1 1 320px; min-width: 260px; }
+.call h2 { font-size: 23px; font-weight: 700; letter-spacing: -.3px; }
+.call p { margin: 4px 0 0; font-size: 16px; color: var(--muted); }
+.call button {
+  border: 0; background: var(--busy); color: #fff; border-radius: 12px; padding: 14px 28px;
+  font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow);
+}
+.call button:hover { filter: brightness(1.06); }
+
+/* tela de revisão */
+.review-sheet { width: min(1080px, 100%); }
+.rv-body { padding: 0 22px; display: grid; grid-template-columns: minmax(320px, 1.35fr) 1fr; gap: 22px; }
+.rv-player video { width: 100%; border-radius: 12px; background: #000; max-height: 52vh; }
+.rv-range { margin-top: 10px; font-size: 14.5px; color: var(--muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rv-range button { border: 1px solid var(--line); background: var(--card-2); color: var(--text); border-radius: 9px; padding: 6px 14px; cursor: pointer; font-size: 14px; }
+.rv-info h4 { margin: 0 0 6px; font-size: 19px; font-weight: 700; letter-spacing: -.2px; }
+.rv-info .hookline { font-size: 16px; margin: 0 0 12px; }
+.rv-info .why { font-size: 15px; color: var(--muted); margin: 0 0 14px; }
+.rv-info details { font-size: 15px; color: var(--muted); }
+.rv-info summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.rv-info details p { margin: 8px 0 0; max-height: 200px; overflow: auto; }
+.rv-actions { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 20px 22px 6px; flex-wrap: wrap; }
+.rv-actions button { border-radius: 999px; cursor: pointer; font-size: 17px; font-weight: 700; padding: 14px 30px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); }
+.rv-actions .step { padding: 12px 18px; font-size: 18px; }
+.rv-actions .approve { background: var(--ok); border-color: var(--ok); color: #fff; }
+.rv-actions .reject { background: var(--card); border-color: var(--bad); color: var(--bad); }
+.rv-actions .approve.on { box-shadow: 0 0 0 4px var(--ok-soft); }
+.rv-actions .reject.on { background: var(--bad); color: #fff; }
+.rv-foot { display: flex; align-items: center; gap: 16px; padding: 14px 22px 22px; flex-wrap: wrap; }
+.dots { display: flex; gap: 7px; flex: 1; flex-wrap: wrap; }
+.dots i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; background: var(--card-2); }
+.dots i.approved { background: var(--ok); border-color: var(--ok); color: #fff; }
+.dots i.rejected { background: var(--bad); border-color: var(--bad); color: #fff; }
+.dots i.here { outline: 3px solid var(--accent-soft); }
+.rv-foot .send { border: 0; border-radius: 12px; padding: 14px 26px; font-size: 16.5px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; }
+.rv-foot .send:disabled { background: var(--line); color: var(--muted); cursor: default; }
+.rv-done { padding: 40px 24px; text-align: center; }
+.rv-done b { display: block; font-size: 22px; margin-bottom: 8px; }
+@media (max-width: 860px) { .rv-body { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">C</div>
+  <div class="brand">
+    <h1>Clipper</h1>
+    <p>acompanhe seus cortes do começo ao fim</p>
+  </div>
+  <div class="right">
+    <div class="pill" id="state-pill"><span class="blip"></span><span id="state-text">conectando…</span></div>
+    <div class="switch">
+      <button id="mode-simple" class="on">Simples</button>
+      <button id="mode-detail">Detalhes</button>
+    </div>
+    <button class="icon-btn" id="theme-btn" title="Trocar entre claro e escuro">◐</button>
+  </div>
+</header>
+
+<main>
+  <section id="review-call"></section>
+
+  <section>
+    <div class="card now" id="now"></div>
+  </section>
+
+  <section id="agent-wrap" hidden>
+    <h2>A sessão do agent</h2>
+    <div class="card agent" id="agent"></div>
+  </section>
+
+  <section>
+    <h2>O caminho de cada vídeo</h2>
+    <div class="card journey"><div class="stops" id="stops"></div></div>
+  </section>
+
+  <section>
+    <h2>Seus cortes</h2>
+    <div class="tabs" id="tabs">
+      <button data-f="todos" class="on">Todos</button>
+      <button data-f="andamento">Sendo preparados</button>
+      <button data-f="prontos">Já no Drive</button>
+    </div>
+    <p class="hint" id="hint">Clique em um corte para assistir aqui mesmo.</p>
+    <div class="grid" id="grid"></div>
+    <button class="more" id="more"></button>
+  </section>
+
+  <section>
+    <h2>Vídeos</h2>
+    <div class="videos" id="videos"></div>
+  </section>
+
+  <section>
+    <h2>Próximos da fila</h2>
+    <div class="qlist" id="queue"></div>
+    <div class="qedit">
+      <input id="q-url" placeholder="cole uma URL do YouTube e aperte Enter" />
+      <button class="act" id="q-add">Adicionar</button>
+      <span id="q-said"></span>
+    </div>
+  </section>
+
+  <section id="ev-wrap" hidden>
+    <h2>Notas dos cortes</h2>
+    <div class="card">
+      <div class="ev-head" style="padding:14px 16px 0">
+        <div class="acts" id="ev-tabs"></div>
+        <span class="tag" id="ev-count"></span>
+        <span id="ev-said"></span>
+      </div>
+      <div id="ev-list"></div>
+    </div>
+  </section>
+
+  <section class="detail-only" id="chan-wrap">
+    <h2>Canais</h2>
+    <div class="card chan">
+      <div class="acts" id="chan-tabs"></div>
+      <div class="note" id="chan-note"></div>
+      <textarea id="chan-body" spellcheck="false"></textarea>
+      <div class="acts">
+        <button class="act" id="chan-save">Salvar canal</button>
+        <span id="chan-said"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail-only">
+    <h2>Registro técnico</h2>
+    <div class="card" style="padding:18px 20px">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:10px" id="log-name"></div>
+      <pre class="log" id="log"></pre>
+    </div>
+  </section>
+</main>
+
+<div class="modal hidden" id="modal">
+  <div class="sheet">
+    <div class="head">
+      <h3 id="m-title"></h3>
+      <span class="close" id="m-close">fechar</span>
+    </div>
+    <div class="body">
+      <div id="m-player"></div>
+      <dl class="facts" id="m-facts"></dl>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="review">
+  <div class="sheet review-sheet">
+    <div class="head">
+      <h3 id="rv-title"></h3>
+      <span class="tag soft" id="rv-counter"></span>
+      <span class="close" id="rv-close">sair</span>
+    </div>
+    <div id="rv-main">
+      <div class="rv-body">
+        <div class="rv-player">
+          <video id="rv-video" controls playsinline preload="metadata"></video>
+          <div class="rv-range">
+            <span id="rv-range-text"></span>
+            <button id="rv-replay">repetir o trecho</button>
+          </div>
+        </div>
+        <div class="rv-info">
+          <h4 id="rv-topic"></h4>
+          <p class="hookline" id="rv-hook"></p>
+          <p class="why" id="rv-reason"></p>
+          <details>
+            <summary>Ler o que é dito nesse trecho</summary>
+            <p id="rv-text"></p>
+          </details>
+        </div>
+      </div>
+      <div class="rv-actions">
+        <button class="step" id="rv-prev" title="Anterior">◀</button>
+        <button class="reject" id="rv-reject">Descartar</button>
+        <button class="approve" id="rv-approve">Aprovar</button>
+        <button class="step" id="rv-next" title="Próximo">▶</button>
+      </div>
+      <div class="rv-foot">
+        <div class="dots" id="rv-dots"></div>
+        <span id="rv-error" style="color:var(--bad);font-size:14.5px"></span>
+        <button class="send" id="rv-send"></button>
+      </div>
+    </div>
+    <div class="rv-done" id="rv-done" hidden></div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * Vocabulário: a página fala português comum, não o nome dos estágios.
+ * ------------------------------------------------------------------ */
+const STEPS = [
+  { key: "queue",      name: "Na fila",     icon: "list",     doing: "Esperando a vez" },
+  { key: "ingest",     name: "Baixando",    icon: "download", doing: "Baixando o vídeo do YouTube" },
+  { key: "transcribe", name: "Ouvindo",     icon: "mic",      doing: "Ouvindo o vídeo e escrevendo tudo o que é dito" },
+  { key: "select",     name: "Escolhendo",  icon: "spark",    doing: "Lendo a transcrição e escolhendo os melhores trechos" },
+  { key: "render",     name: "Montando",    icon: "film",     doing: "Montando os cortes com legenda" },
+  { key: "package",    name: "Descrevendo", icon: "text",     doing: "Escrevendo título, descrição e hashtags" },
+  { key: "deliver",    name: "Entregando",  icon: "cloud",    doing: "Enviando os cortes para o Google Drive" },
+];
+/* `review` é automático na fila: entra em "Escolhendo" para não virar mais uma caixa. */
+const STEP_OF = { ingest: "ingest", transcribe: "transcribe", select: "select", review: "select",
+                  render: "render", package: "package", deliver: "deliver" };
+const STEP_NAME = Object.fromEntries(STEPS.map((s) => [s.key, s.name]));
+const CLIP_STATE = {
+  select: "Escolhido", review: "Escolhido", render: "Esperando montagem",
+  package: "Montado", deliver: "Pronto para enviar",
+};
+const ICONS = {
+  list: "M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01",
+  download: "M12 3v11M7.5 10.5 12 15l4.5-4.5M4 20h16",
+  mic: "M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21",
+  spark: "M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2zM18.5 3.5v3M20 5h-3",
+  film: "M4 5h16v14H4zM10 9.2v5.6l4.5-2.8z",
+  text: "M5 6.5h14M5 12h14M5 17.5h8",
+  cloud: "M12 16.5V9m-3 2.5L12 8.5l3 3M6.5 19h11a3.5 3.5 0 0 0 .4-7 6 6 0 0 0-11.5-1.6A3.5 3.5 0 0 0 6.5 19z",
+};
+
+let snapshot = null;
+let tab = "todos";
+let expanded = false;
+let previousStep = {};
+const drawn = {};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const icon = (name, size = 26) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONS[name]}"/></svg>`;
+
+function minutes(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  const m = Math.floor(s / 60), r = s % 60;
+  return m ? `${m} min ${String(r).padStart(2, "0")}s` : `${r}s`;
+}
+function clock(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  return h ? `${h}h${String(m).padStart(2, "0")}` : `${m}:${String(r).padStart(2, "0")}`;
+}
+function since(iso) {
+  if (!iso) return "";
+  const delta = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (!isFinite(delta) || delta < 0) return "";
+  if (delta < 90) return "há poucos segundos";
+  if (delta < 5400) return `há ${Math.round(delta / 60)} min`;
+  return `há ${Math.round(delta / 3600)} h`;
+}
+const clipKey = (c) => `${c.video_id}/${c.profile}/${c.dir_name}`;
+const allClips = (snap) => snap.videos.flatMap((v) => v.profiles.flatMap((p) => p.clips));
+const stageMap = (v) => {
+  const map = {};
+  for (const s of v.stages) map[s.name] = s;
+  for (const p of v.profiles) for (const s of p.stages) {
+    const seen = map[s.name];
+    // uma raia rodando manda na cor do passo; senão vale a mais adiantada
+    if (!seen || s.status === "running" || (seen.status === "pending" && s.status !== "pending")) map[s.name] = s;
+  }
+  return map;
+};
+
+/* passo em que o vídeo está, em linguagem de passo */
+function videoStep(v) {
+  const map = stageMap(v);
+  for (const name of ["ingest", "transcribe", "select", "review", "render", "package", "deliver"]) {
+    const stage = map[name];
+    if (!stage) continue;
+    if (stage.status === "running") return { step: STEP_OF[name], stage, busy: true, bad: false };
+    if (stage.status === "failed") return { step: STEP_OF[name], stage, busy: false, bad: true };
+    if (stage.status !== "done") return { step: STEP_OF[name], stage, busy: false, bad: false };
+  }
+  return { step: "deliver", stage: map.deliver, busy: false, bad: false };
+}
+function videoProgress(v) {
+  const map = stageMap(v);
+  const names = ["ingest", "transcribe", "select", "render", "package", "deliver"];
+  const done = names.filter((n) => map[n] && map[n].status === "done").length;
+  return Math.round((done / names.length) * 100);
+}
+function clipState(c) {
+  if (c.status === "rejected") return { text: "Descartado", kind: "" };
+  if (c.delivered) return { text: "Já no Drive", kind: "ok" };
+  if (c.active) return { text: STEPS.find((s) => s.key === STEP_OF[c.node]).name + " agora", kind: "busy" };
+  return { text: CLIP_STATE[c.node] || "Em preparo", kind: "" };
+}
+
+/* ------------------------------ agora ----------------------------- */
+function renderNow(snap) {
+  const clips = allClips(snap);
+  const busy = snap.videos.find((v) => v.active) || null;
+  const ready = clips.filter((c) => c.delivered).length;
+  let eyebrow = "Tudo parado", headline = "Nada rodando agora", sub = "", progress = 0, busyBar = false;
+
+  if (busy) {
+    const step = videoStep(busy);
+    const info = STEPS.find((s) => s.key === step.step);
+    eyebrow = "Trabalhando agora";
+    headline = info ? info.doing : "Trabalhando";
+    const parts = [busy.title || busy.video_id];
+    const when = since(step.stage && step.stage.updated_at);
+    if (when) parts.push(`começou ${when}`);
+    sub = parts.join(" · ");
+    progress = videoProgress(busy);
+    busyBar = true;
+  } else if (snap.running) {
+    eyebrow = "Trabalhando agora";
+    headline = "Preparando o próximo vídeo";
+    sub = "A fila está rodando";
+    busyBar = true;
+  } else {
+    const waiting = snap.queue.filter((q) => q.status === "fila").length;
+    sub = waiting
+      ? `${waiting} vídeo(s) esperando — rode a fila para continuar`
+      : "Nenhum vídeo em processamento";
+    progress = clips.length ? Math.round((ready / clips.length) * 100) : 0;
+  }
+
+  const html = `
+    <div class="what">
+      <div class="eyebrow">${esc(eyebrow)}</div>
+      <h2 class="headline">${esc(headline)}</h2>
+      <div class="sub">${esc(sub)}</div>
+      <div class="bar ${busyBar ? "busy" : ""}"><i style="width:${progress}%"></i></div>
+    </div>
+    <div class="side">
+      <div class="figure"><b>${clips.length}</b><span>cortes gerados</span></div>
+      <div class="figure"><b>${ready}</b><span>já no Drive</span></div>
+      <div class="figure"><b>${snap.queue.filter((q) => q.status === "fila").length}</b><span>na fila</span></div>
+    </div>`;
+  paint("now", $("now"), html);
+}
+
+/* -------------------------- sessão do agent ------------------------ */
+/* O resumo vem no snapshot; a trilha inteira é buscada sob demanda, e só no
+   modo Detalhes, para o push do SSE continuar pequeno (SPEC-agent 9.3). */
+let agentFull = null;
+let agentFetching = "";
+let agentVetoed = [];
+
+const STATE_KIND = { rodando: "busy", concluida: "ok", incompleta: "busy", falhou: "bad", cancelada: "" };
+const VERDICT_KIND = { ok: "ok", warn: "busy", fail: "bad" };
+
+function agentSession(snap) {
+  const sessions = snap.videos.filter((v) => v.agent).map((v) => ({ video: v, run: v.agent }));
+  if (!sessions.length) return null;
+  return sessions.find((s) => s.run.state === "rodando")
+    || sessions.sort((a, b) => (b.run.started_at || "").localeCompare(a.run.started_at || ""))[0];
+}
+
+function budgetHtml(lines) {
+  if (!lines || !lines.length) return "";
+  const items = lines.map((line) => {
+    const unit = line.unit ? ` ${line.unit}` : "";
+    // Sem limite nao ha barra: um numero que so e reportado (respostas do modelo,
+    // leitura de cache) nao pode virar uma barra que enche.
+    if (!line.limit) {
+      return `<div class="item">
+        <div class="top"><span>${esc(line.name)}</span><span>${line.used.toLocaleString("pt-BR")}${esc(unit)}</span></div>
+      </div>`;
+    }
+    const share = line.used / line.limit;
+    const kind = share >= 1 ? "over" : share >= 0.8 ? "warn" : "";
+    return `<div class="item ${kind}">
+      <div class="top"><span>${esc(line.name)}</span><span>${line.used}/${line.limit}${esc(unit)}</span></div>
+      <div class="track"><i style="width:${Math.min(100, Math.round(share * 100))}%"></i></div>
+    </div>`;
+  }).join("");
+  return `<div class="budget">${items}</div>`;
+}
+
+function agentClipHtml(clip, live) {
+  const verdict = clip.verdict
+    ? `<span class="tag ${VERDICT_KIND[clip.verdict] || ""}">${esc(clip.verdict)}</span>` : "";
+  const renders = clip.renders ? `<span class="tag soft">${clip.renders} render(s)</span>` : "";
+  const failed = (clip.checks || []).filter((c) => c.status === "fail").map((c) => c.check);
+  const why = failed.length ? `<span class="detail-only">${esc(failed.join(", "))}</span>` : "";
+  const vetoed = (agentVetoed || []).includes(clip.clip_id);
+  const veto = live && !vetoed
+    ? `<button class="act tiny danger" data-veto="${esc(clip.clip_id)}">vetar</button>`
+    : vetoed ? `<span class="tag bad">vetado</span>` : "";
+  return `<div class="aclip">
+    <b>${esc(clip.profile)} ${String(clip.index).padStart(2, "0")}</b>
+    <span class="grow">${esc(clip.title || clip.topic || clip.clip_id)}</span>
+    ${why}<span class="tag soft">${esc(clip.stage)}</span>${renders}${verdict}${veto}
+  </div>`;
+}
+
+function trailHtml(run) {
+  const steps = (agentFull && agentFull.run_id === run.run_id ? agentFull.trail : run.trail) || [];
+  if (!steps.length) return "";
+  const rows = steps.slice(-40).map((step) => {
+    const bad = step.kind !== "tool_call";
+    const took = step.duration_ms ? minutes(step.duration_ms / 1000) : "";
+    const what = step.error || step.summary || "";
+    return `<div class="row ${bad ? "bad" : ""}">
+      <span class="tool">${esc(step.tool)}</span>
+      <span class="what">${esc(what)}</span>
+      <span class="took">${esc(took)}</span>
+    </div>`;
+  }).join("");
+  const total = run.trail_total || steps.length;
+  const note = total > steps.length ? `<div class="hint">mostrando as últimas ${steps.length} de ${total} chamadas</div>` : "";
+  return `<div><div class="sub-title">Trilha</div>${note}<div class="trail">${rows}</div></div>`;
+}
+
+function checksHtml(run) {
+  const rows = (run.clips || []).flatMap((clip) =>
+    (clip.checks || []).map((check) => `<div class="row">
+      <b>${esc(clip.profile)} ${String(clip.index).padStart(2, "0")}</b>
+      <span class="tag ${VERDICT_KIND[check.status] || ""}">${esc(check.check)}</span>
+      <span>${esc(check.value)}${check.expected ? ` · esperado ${esc(check.expected)}` : ""}</span>
+      ${check.fix ? `<span class="tag soft">${esc(check.fix)}</span>` : ""}
+    </div>`));
+  if (!rows.length) return "";
+  return `<div><div class="sub-title">Laudos</div><div class="checks">${rows.join("")}</div></div>`;
+}
+
+function movesHtml(run) {
+  const moves = (agentFull && agentFull.run_id === run.run_id ? agentFull.boundary_changes : []) || [];
+  if (!moves.length) return "";
+  const rows = moves.map((move) => {
+    const before = move.before.map(([a, b]) => `${clock(a)}–${clock(b)}`).join(", ");
+    const after = move.after.map(([a, b]) => `${clock(a)}–${clock(b)}`).join(", ");
+    const tail = move.accepted ? `→ ${esc(after)}` : `recusado: ${esc(move.reason)}`;
+    return `<div>${esc(before)} ${tail}</div>`;
+  }).join("");
+  return `<div><div class="sub-title">Fronteiras mexidas</div><div class="moves">${rows}</div></div>`;
+}
+
+function loadAgentTrail(video, run) {
+  const key = `${run.run_id}:${run.trail_total}`;
+  if (!document.body.classList.contains("detailed") || agentFetching === key) return;
+  if (agentFull && agentFull.run_id === run.run_id && agentFull.trail_total === run.trail_total) return;
+  agentFetching = key;
+  fetch(`/api/agent?video_id=${encodeURIComponent(video.video_id)}&run_id=${encodeURIComponent(run.run_id)}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((full) => { if (full) { agentFull = full; renderAgent(snapshot); } })
+    .catch(() => { /* a página segue com o resumo */ });
+}
+
+function renderAgent(snap) {
+  const session = agentSession(snap);
+  const wrap = $("agent-wrap");
+  if (!session) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  const { video, run } = session;
+  loadAgentTrail(video, run);
+
+  const kind = STATE_KIND[run.state] || "";
+  const meta = [
+    video.title || run.video_id,
+    `${run.turns} turno(s)`,
+    run.elapsed_s ? minutes(run.elapsed_s) : "",
+    run.cost_usd ? `US$ ${run.cost_usd.toFixed(2)}` : "",
+  ].filter(Boolean).join(" · ");
+
+  const stuck = run.state === "rodando" && run.idle_s > 300;
+  const doing = run.now && run.now.tool
+    ? `<div class="doing"><span class="spin"></span>
+         <b>${esc(run.now.tool)}</b><span>${esc(run.now.summary)}</span>
+         <span class="took">há ${esc(minutes(run.now.since_s))}</span></div>`
+    : run.state === "rodando"
+      ? `<div class="doing"><span class="spin"></span><span>pensando no próximo passo</span></div>`
+      : "";
+
+  const said = run.now && run.now.text ? `<div class="said">${esc(run.now.text)}</div>` : "";
+  agentVetoed = run.vetoed || [];
+  // Declarado antes de quem o usa: `const` nao sobe, e ler aqui embaixo derrubava
+  // renderAgent inteiro - e com ele tudo que render() desenha depois.
+  const live = run.state === "rodando";
+  const clips = (run.clips || []).length
+    ? `<div class="aclips">${run.clips.map((c) => agentClipHtml(c, live)).join("")}</div>` : "";
+  const ending = run.reason ? `<div class="hint">${esc(run.reason)}</div>` : "";
+  const delivered = (run.delivered || []).length
+    ? `<div class="hint">entregues: ${esc(run.delivered.join(", "))}</div>` : "";
+  const skipped = (run.skipped || []).length
+    ? `<div class="hint">de fora: ${esc(run.skipped.join(" · "))}</div>` : "";
+  const idle = stuck ? `<div class="hint">sem novidade há ${esc(minutes(run.idle_s))}</div>` : "";
+
+  const paused = run.control === "pause";
+  const acts = live ? `
+    <div class="acts">
+      <button class="act ${paused ? "on" : ""}" data-run-action="${paused ? "run" : "pause"}">
+        ${paused ? "Retomar" : "Pausar"}
+      </button>
+      <button class="act danger" data-run-action="stop">Parar e entregar o pronto</button>
+      <button class="act danger" data-run-action="stop-nothing">Parar sem entregar</button>
+      <span id="agent-said"></span>
+    </div>` : `<span id="agent-said"></span>`;
+
+  const html = `
+    <div class="head">
+      <span class="tag ${kind}">${esc(run.state)}</span>
+      <b>${esc(run.run_id)}</b>
+      <span class="meta">${esc(meta)}</span>
+    </div>
+    ${paused ? `<div class="doing"><span>pausada por você — o agent está esperando</span></div>` : ""}
+    ${acts}
+    ${budgetHtml(run.budget)}
+    ${doing}${idle}${said}
+    ${clips}
+    ${ending}${delivered}${skipped}
+    <div class="detail-only">${checksHtml(run)}</div>
+    <div class="detail-only">${movesHtml(run)}</div>
+    <div class="detail-only">${trailHtml(run)}</div>`;
+  paint("agent", $("agent"), html);
+}
+
+/* ------------------- escritas da pagina (9.5, 11.3) ---------------- */
+/* Cinco caminhos, um arquivo cada, todos validados no servidor. A pagina nunca
+   manda caminho: manda o que quer, e o servidor sabe onde isso mora. */
+async function send(route, payload, said) {
+  if (said) { said.className = ""; said.textContent = "salvando…"; }
+  try {
+    const response = await fetch(route, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const answer = await response.json();
+    if (!response.ok || !answer.ok) throw new Error(answer.error || "não deu");
+    if (said) { said.className = "said-ok"; said.textContent = "salvo"; }
+    return answer;
+  } catch (error) {
+    if (said) { said.className = "said-bad"; said.textContent = String(error.message || error); }
+    return null;
+  }
+}
+
+/* ------------------------------- fila ----------------------------- */
+function queueUrls(snap) {
+  return snap.queue.filter((q) => ["fila", "processando", "parado"].includes(q.status)).map((q) => q.url);
+}
+
+async function queueWrite(urls) {
+  const said = $("q-said");
+  const answer = await send("/api/queue", { urls }, said);
+  if (answer) setTimeout(() => { said.textContent = ""; }, 2500);
+  return answer;
+}
+
+function moveInQueue(url, delta) {
+  const urls = queueUrls(snapshot);
+  const from = urls.indexOf(url);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= urls.length) return;
+  urls.splice(to, 0, urls.splice(from, 1)[0]);
+  queueWrite(urls);
+}
+
+function removeFromQueue(url) {
+  queueWrite(queueUrls(snapshot).filter((u) => u !== url));
+}
+
+$("q-add").addEventListener("click", async () => {
+  const field = $("q-url");
+  const url = field.value.trim();
+  if (!url) return;
+  const answer = await queueWrite([...queueUrls(snapshot), url]);
+  if (answer) field.value = "";
+});
+$("q-url").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") $("q-add").click();
+});
+
+/* ------------------------------ canais ---------------------------- */
+let openChannel = null;
+
+async function loadChannel(id) {
+  openChannel = id;
+  const response = await fetch(`/api/channels?id=${encodeURIComponent(id)}`);
+  if (!response.ok) return;
+  const data = await response.json();
+  $("chan-body").value = JSON.stringify(data.profile, null, 2);
+  const learned = (data.learned.entries || []).length;
+  $("chan-note").textContent =
+    `${data.path} · ${learned} anotação(ões) do agent em ${data.learned_path}` +
+    " · salvar pela página reescreve o arquivo e perde os comentários";
+  renderChannelTabs(snapshot);
+}
+
+function renderChannelTabs(snap) {
+  const names = snap.channels || [];
+  $("chan-wrap").hidden = !names.length;
+  paint("chan-tabs", $("chan-tabs"), names.map((name) =>
+    `<button class="act ${name === openChannel ? "on" : ""}" data-channel="${esc(name)}">${esc(name)}</button>`
+  ).join(""));
+}
+
+$("queue").addEventListener("click", (event) => {
+  const move = event.target.closest("[data-qmove]");
+  if (move) { moveInQueue(move.dataset.url, Number(move.dataset.qmove)); return; }
+  const drop = event.target.closest("[data-qdel]");
+  if (drop) removeFromQueue(drop.dataset.qdel);
+});
+
+$("agent").addEventListener("click", (event) => {
+  const session = agentSession(snapshot);
+  if (!session) return;
+  const veto = event.target.closest("[data-veto]");
+  if (veto) {
+    control(session.run, session.video, session.run.control || "run",
+            { vetoed: [veto.dataset.veto] });
+    return;
+  }
+  const button = event.target.closest("[data-run-action]");
+  if (!button) return;
+  const asked = button.dataset.runAction;
+  if (asked === "stop-nothing") control(session.run, session.video, "stop", { publish_on_stop: false });
+  else control(session.run, session.video, asked);
+});
+
+$("chan-tabs").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-channel]");
+  if (button) loadChannel(button.dataset.channel);
+});
+
+$("chan-save").addEventListener("click", async () => {
+  let profile;
+  try {
+    profile = JSON.parse($("chan-body").value);
+  } catch (error) {
+    $("chan-said").className = "said-bad";
+    $("chan-said").textContent = "isso não é JSON válido";
+    return;
+  }
+  await send("/api/channel", { profile }, $("chan-said"));
+});
+
+/* --------------------- controle da sessao ------------------------- */
+async function control(run, video, action, extra = {}) {
+  await send("/api/agent/control", {
+    video_id: video.video_id,
+    run_id: run.run_id,
+    action,
+    ...extra,
+  }, $("agent-said"));
+}
+
+/* ----------------------------- jornada ---------------------------- */
+function renderJourney(snap) {
+  const clips = allClips(snap);
+  const counts = {};
+  for (const step of STEPS) counts[step.key] = 0;
+  counts.queue = snap.queue.filter((q) => q.status === "fila").length;
+  for (const v of snap.videos) {
+    if (v.from_history) continue;
+    const step = videoStep(v);
+    if (step.step === "ingest" || step.step === "transcribe") counts[step.step] += 1;
+  }
+  let onDrive = 0;
+  for (const c of clips) {
+    if (c.status === "rejected") continue;
+    if (c.delivered) onDrive += 1;
+    else counts[STEP_OF[c.node]] += 1;
+  }
+
+  const busySteps = new Set();
+  const doneSteps = new Set();
+  const badSteps = new Set();
+  for (const v of snap.videos) {
+    if (v.from_history) continue;
+    const map = stageMap(v);
+    for (const [name, stage] of Object.entries(map)) {
+      const step = STEP_OF[name];
+      if (stage.status === "running") busySteps.add(step);
+      else if (stage.status === "done") doneSteps.add(step);
+      else if (stage.status === "failed") badSteps.add(step);
+    }
+  }
+
+  const html = STEPS.map((step) => {
+    const state = badSteps.has(step.key) ? "bad"
+      : busySteps.has(step.key) ? "busy"
+      : (doneSteps.has(step.key) || (step.key === "queue" && counts.queue === 0)) ? "done" : "";
+    let label = counts[step.key] ? `${counts[step.key]} aqui` : "";
+    if (step.key === "queue") {
+      label = counts.queue ? `${counts.queue} vídeo${counts.queue > 1 ? "s" : ""}` : "vazia";
+    } else if (step.key === "deliver") {
+      // subindo agora e já entregue são coisas diferentes para quem olha
+      label = counts.deliver ? `${counts.deliver} subindo` : onDrive ? `${onDrive} no Drive` : "";
+    }
+    return `
+      <div class="stop ${state}">
+        <div class="link"></div>
+        <div class="bubble">${icon(step.icon)}</div>
+        <div class="name">${step.name}</div>
+        <div class="count">${esc(label)}</div>
+      </div>`;
+  }).join("");
+  paint("stops", $("stops"), html);
+}
+
+/* ------------------------------ cortes ---------------------------- */
+function clipCard(c) {
+  const state = clipState(c);
+  const url = `/api/thumbnail?video=${encodeURIComponent(c.video_id)}&profile=${encodeURIComponent(c.profile)}&clip=${encodeURIComponent(c.dir_name)}`;
+  const shot = c.has_thumbnail
+    ? `<div class="shot">
+         <div class="haze" style="background-image:url('${url}')"></div>
+         <img src="${url}" alt="" loading="lazy">
+         ${c.rendered ? '<div class="play">▶</div>' : ""}
+       </div>`
+    : `<div class="shot waiting">${c.status === "rejected" ? "descartado" : "ainda montando"}</div>`;
+  return `
+    <article class="clip" data-clip="${esc(clipKey(c))}">
+      ${shot}
+      <div class="txt">
+        <h3 title="${esc(c.title || c.topic || "")}">${esc(c.title || c.topic || "Sem título ainda")}</h3>
+        <div class="line"><span>${esc(c.profile)}</span><span class="dotmark"></span><span>${clock(c.duration)}</span></div>
+        <div class="line"><span class="tag ${state.kind}">${esc(state.text)}</span></div>
+      </div>
+    </article>`;
+}
+
+//: Cartões mostrados antes do botão "ver todos" - uma fila longa vira parede.
+const CLIPS_VISIBLE = 10;
+
+function renderClips(snap) {
+  let clips = allClips(snap);
+  if (tab === "andamento") clips = clips.filter((c) => !c.delivered && c.status !== "rejected");
+  if (tab === "prontos") clips = clips.filter((c) => c.delivered);
+  clips.sort((a, b) => (b.updated_at - a.updated_at) || a.index - b.index);
+
+  const hidden = expanded ? 0 : Math.max(0, clips.length - CLIPS_VISIBLE);
+  const shown = hidden ? clips.slice(0, CLIPS_VISIBLE) : clips;
+  const html = clips.length
+    ? shown.map(clipCard).join("")
+    : `<div class="card empty" style="grid-column:1/-1"><b>Nenhum corte por aqui ainda</b>
+        Assim que um vídeo passar pela montagem, os cortes aparecem nesta área.</div>`;
+  paint("grid" + tab + expanded, $("grid"), html);
+
+  const more = $("more");
+  more.style.display = hidden ? "block" : "none";
+  more.textContent = hidden ? `Ver todos os ${clips.length} cortes` : "";
+  $("hint").style.display = clips.length ? "block" : "none";
+}
+
+/* ------------------------------ vídeos ---------------------------- */
+function laneHtml(p) {
+  const cells = p.stages.map((s, i) => {
+    const label = STEP_NAME[STEP_OF[s.name]] || s.name;
+    const extra = s.name === "review" ? "conferência" : s.name;
+    return `<div class="cell ${esc(s.status)}">
+        <div class="cname">${esc(label)}</div>
+        <div class="cinfo">${esc(s.detail || extra)}</div>
+      </div>${i < p.stages.length - 1 ? '<div class="arrow"></div>' : ""}`;
+  }).join("");
+  return `<div class="lane"><div class="label">${esc(p.name)}</div>${cells}</div>`;
+}
+
+function videoRow(v) {
+  const step = videoStep(v);
+  const info = STEPS.find((s) => s.key === step.step);
+  const clips = v.profiles.flatMap((p) => p.clips);
+  const ready = clips.filter((c) => c.delivered).length;
+  const tag = step.bad ? `<span class="tag bad">deu problema</span>`
+    : v.active ? `<span class="tag busy">${esc(info ? info.name : "trabalhando")}</span>`
+    : v.delivered ? `<span class="tag ok">entregue</span>`
+    : v.from_history ? `<span class="tag">concluído antes</span>`
+    : `<span class="tag">parado</span>`;
+  const marks = ["ingest", "transcribe", "select", "render", "package", "deliver"].map((name) => {
+    const map = stageMap(v);
+    const stage = map[name];
+    const cls = !stage ? "" : stage.status === "done" ? "done" : stage.status === "running" ? "busy"
+      : stage.status === "failed" ? "bad" : stage.status === "parado" ? "held" : "";
+    return `<i class="${cls}" title="${STEP_NAME[STEP_OF[name]]}"></i>`;
+  }).join("");
+  const sub = [
+    v.channel,
+    v.duration ? clock(v.duration) : "",
+    clips.length ? `${clips.length} corte${clips.length > 1 ? "s" : ""}${ready ? `, ${ready} no Drive` : ""}` : "",
+  ].filter(Boolean).join(" · ");
+  return `
+    <div class="card">
+      <div class="vrow">
+        <div class="vinfo">
+          <h3>${esc(v.title || v.video_id)}</h3>
+          <div class="vsub">${esc(sub)}</div>
+        </div>
+        <div class="mini">${marks}</div>
+        ${tag}
+      </div>
+      <div class="detail-only lanes">${v.profiles.map(laneHtml).join("")}</div>
+    </div>`;
+}
+
+function renderVideos(snap) {
+  const live = snap.videos.filter((v) => !v.from_history);
+  const rest = snap.videos.filter((v) => v.from_history);
+  const list = [...live, ...rest];
+  const html = list.length
+    ? list.map(videoRow).join("")
+    : `<div class="card empty"><b>Nenhum vídeo ainda</b>Coloque um link na fila para começar.</div>`;
+  paint("videos", $("videos"), html);
+}
+
+/* ------------------------------- fila ----------------------------- */
+function queueRowActions(item) {
+  if (item.status !== "fila" && item.status !== "parado") return "";
+  return `<div class="acts">
+    <button class="act tiny" data-qmove="-1" data-url="${esc(item.url)}" title="subir">↑</button>
+    <button class="act tiny" data-qmove="1" data-url="${esc(item.url)}" title="descer">↓</button>
+    <button class="act tiny danger" data-qdel="${esc(item.url)}">tirar</button>
+  </div>`;
+}
+
+function renderQueue(snap) {
+  const words = { fila: ["esperando", ""], processando: ["em produção", "busy"],
+                  parado: ["parado no meio", "held"], entregue: ["pronto", "ok"],
+                  falhou: ["deu problema", "bad"], invalido: ["link inválido", "bad"] };
+  const html = snap.queue.length ? snap.queue.map((q) => {
+    const [text, kind] = words[q.status] || [q.status, ""];
+    return `<div class="card qrow">
+      <div class="num">${q.position}</div>
+      <div class="qtxt"><b>${esc(q.title || "Vídeo ainda não baixado")}</b><span>${esc(q.url)}</span></div>
+      <span class="tag ${kind}">${esc(text)}</span>
+      ${queueRowActions(q)}
+    </div>`;
+  }).join("") : `<div class="card empty"><b>A fila está vazia</b>Todos os vídeos da lista já foram processados.</div>`;
+  paint("queue", $("queue"), html);
+}
+
+/* ------------------------------- log ------------------------------ */
+function renderLog(snap) {
+  const v = snap.videos.find((x) => x.active && x.log.length) || snap.videos.find((x) => x.log.length);
+  const box = $("log");
+  $("log-name").textContent = v ? `${v.title || v.video_id} · ${v.log_name}` : "";
+  const text = v ? v.log.join("\n") : "sem registro no momento";
+  if (box.textContent !== text) {
+    const stuck = box.scrollTop + box.clientHeight >= box.scrollHeight - 24;
+    box.textContent = text;
+    if (stuck) box.scrollTop = box.scrollHeight;
+  }
+}
+
+/* -------------------------- notas dos cortes ---------------------- */
+/* A pagina nao manda caminho: manda o nome da rodada e o servidor casa com as
+   que existem em evals/. Grava so as duas colunas que sao suas. */
+let evRound = recall("clipper-eval-round") || "";
+const evOpen = new Set();
+
+function evRoundOf(snap) {
+  const rounds = snap.evals || [];
+  return rounds.find((r) => r.name === evRound) || rounds[rounds.length - 1] || null;
+}
+
+function evRow(clip) {
+  const src = `/api/clip?video=${encodeURIComponent(clip.video_id)}&profile=${encodeURIComponent(clip.profile)}&clip=${encodeURIComponent(clip.dir_name)}`;
+  const shot = `/api/thumbnail?video=${encodeURIComponent(clip.video_id)}&profile=${encodeURIComponent(clip.profile)}&clip=${encodeURIComponent(clip.dir_name)}`;
+  const open = evOpen.has(clip.clip_id);
+  const stars = [1, 2, 3, 4, 5].map((n) =>
+    `<button class="${clip.note === n ? "on" : ""}" data-ev-note="${n}" data-ev-clip="${esc(clip.clip_id)}">${n}</button>`
+  ).join("");
+  const sub = [
+    clip.duration ? `${Math.round(clip.duration)}s` : "",
+    clip.dropped ? "descartado pelo agent" : "",
+    !clip.playable ? "vídeo não está mais no workspace" : "",
+  ].filter(Boolean).join(" · ");
+  return `<div class="ev">
+    ${clip.playable
+      ? `<img class="shot" loading="lazy" src="${shot}" alt="" data-ev-play="${esc(clip.clip_id)}">`
+      : `<div class="shot"></div>`}
+    <div class="evbody">
+      <div class="evtitle" ${clip.playable ? `data-ev-play="${esc(clip.clip_id)}"` : ""}>${esc(clip.title || clip.clip_id)}</div>
+      <div class="evsub">${esc(clip.clip_id)}${sub ? " · " + esc(sub) : ""}</div>
+      <div class="stars">${stars}
+        <button class="clear" data-ev-note="0" data-ev-clip="${esc(clip.clip_id)}">limpar</button>
+      </div>
+      <input class="evc" data-ev-comment="${esc(clip.clip_id)}" value="${esc(clip.comment)}"
+             placeholder="por que essa nota? (Enter para salvar)" maxlength="300">
+      ${open ? `<video controls autoplay preload="metadata" src="${src}"></video>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderEvals(snap) {
+  const rounds = snap.evals || [];
+  $("ev-wrap").hidden = rounds.length === 0;
+  if (!rounds.length) return;
+  const round = evRoundOf(snap);
+  evRound = round.name;
+
+  paint("ev-tabs", $("ev-tabs"), rounds.map((r) =>
+    `<button class="act tiny${r.name === round.name ? " on" : ""}" data-ev-round="${esc(r.name)}">${esc(r.name)}</button>`
+  ).join(""));
+  const count = `${round.clips.length} cortes · ${round.marked} com nota` +
+    (round.mean_note ? ` · média ${round.mean_note.toFixed(1)}` : "");
+  paint("ev-count", $("ev-count"), esc(count));
+
+  // Nao repinta por cima de quem esta escrevendo: o SSE chega a cada mudanca.
+  if ($("ev-list").contains(document.activeElement)) return;
+  paint("ev-list", $("ev-list"), round.clips.map(evRow).join(""));
+}
+
+async function evSave(clipId, note, comment) {
+  const round = evRoundOf(snapshot);
+  if (!round) return;
+  const current = round.clips.find((c) => c.clip_id === clipId);
+  if (!current) return;
+  const mark = {
+    clip_id: clipId,
+    note: note === undefined ? current.note : note,
+    comment: comment === undefined ? current.comment : comment,
+  };
+  const answer = await send("/api/evals", { round: round.name, marks: [mark] }, $("ev-said"));
+  if (answer) Object.assign(current, { note: mark.note, comment: mark.comment });
+  if (snapshot) renderEvals(snapshot);
+}
+
+document.addEventListener("click", (e) => {
+  const tab = e.target.closest("[data-ev-round]");
+  if (tab) {
+    evRound = tab.dataset.evRound;
+    remember("clipper-eval-round", evRound);
+    drawn["ev-list"] = null;
+    if (snapshot) renderEvals(snapshot);
+    return;
+  }
+  const play = e.target.closest("[data-ev-play]");
+  if (play) {
+    const id = play.dataset.evPlay;
+    evOpen.has(id) ? evOpen.delete(id) : evOpen.add(id);
+    drawn["ev-list"] = null;
+    if (snapshot) renderEvals(snapshot);
+    return;
+  }
+  const star = e.target.closest("[data-ev-note]");
+  if (star) evSave(star.dataset.evClip, Number(star.dataset.evNote), undefined);
+});
+
+$("ev-list").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.dataset.evComment) e.target.blur();
+});
+$("ev-list").addEventListener("focusout", (e) => {
+  const id = e.target.dataset ? e.target.dataset.evComment : null;
+  if (!id) return;
+  const round = evRoundOf(snapshot);
+  const current = round && round.clips.find((c) => c.clip_id === id);
+  if (current && current.comment !== e.target.value) evSave(id, undefined, e.target.value);
+});
+
+/* ------------------------------ janela ---------------------------- */
+function openClip(key) {
+  const c = allClips(snapshot).find((x) => clipKey(x) === key);
+  if (!c) return;
+  const state = clipState(c);
+  $("m-title").textContent = c.title || c.topic || "Corte sem título";
+  const src = `/api/clip?video=${encodeURIComponent(c.video_id)}&profile=${encodeURIComponent(c.profile)}&clip=${encodeURIComponent(c.dir_name)}`;
+  $("m-player").innerHTML = c.rendered
+    ? `<video controls preload="metadata" src="${src}"></video>`
+    : `<div class="empty" style="padding:40px 10px"><b>Ainda montando</b>O vídeo aparece aqui quando a montagem terminar.</div>`;
+  const trecho = (c.segments || []).map(([a, b]) => `${clock(a)} a ${clock(b)}`).join(" + ");
+  const facts = [
+    ["Situação", state.text],
+    ["Formato", c.profile === "long" ? "long (16:9)" : c.profile === "short" ? "short (9:16)" : c.profile],
+    ["Duração", minutes(c.duration)],
+    ["No vídeo original", trecho || "—"],
+    ["Frase de abertura", c.hook || "—"],
+  ];
+  if (document.body.classList.contains("detailed")) {
+    facts.push(["Nota do modelo", c.score ? Math.round(c.score) + " de 100" : "—"]);
+    facts.push(["Arquivo", c.rendered ? (c.size_bytes / 1048576).toFixed(1) + " MB" : "ainda não existe"]);
+    facts.push(["Pasta", `${c.video_id}/${c.profile}/${c.dir_name}`]);
+  }
+  $("m-facts").innerHTML = facts
+    .map(([k, v]) => `<div class="fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+  $("modal").classList.remove("hidden");
+}
+function closeClip() { $("modal").classList.add("hidden"); $("m-player").innerHTML = ""; }
+$("m-close").onclick = closeClip;
+$("modal").onclick = (e) => { if (e.target.id === "modal") closeClip(); };
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!$("review").classList.contains("hidden")) closeReview();
+  else closeClip();
+});
+document.addEventListener("click", (e) => {
+  const card = e.target.closest("[data-clip]");
+  if (card) openClip(card.dataset.clip);
+});
+
+/* --------------------------- preferências ------------------------- */
+function remember(key, value) { try { localStorage.setItem(key, value); } catch (err) { /* modo privado */ } }
+function recall(key) { try { return localStorage.getItem(key); } catch (err) { return null; } }
+
+function setMode(detailed) {
+  document.body.classList.toggle("detailed", detailed);
+  $("mode-detail").classList.toggle("on", detailed);
+  $("mode-simple").classList.toggle("on", !detailed);
+  remember("clipper-mode", detailed ? "detail" : "simple");
+}
+$("mode-simple").onclick = () => setMode(false);
+$("mode-detail").onclick = () => setMode(true);
+setMode(recall("clipper-mode") === "detail");
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  remember("clipper-theme", theme);
+}
+$("theme-btn").onclick = () =>
+  setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+setTheme(recall("clipper-theme") ||
+  (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+
+$("more").onclick = () => { expanded = true; renderClips(snapshot); };
+
+for (const button of $("tabs").children) {
+  button.onclick = () => {
+    tab = button.dataset.f;
+    expanded = false;
+    for (const other of $("tabs").children) other.classList.toggle("on", other === button);
+    renderClips(snapshot);
+  };
+}
+
+/* ------------------------------ revisão --------------------------- */
+/* O pipeline para e fica esperando um arquivo de resposta; esta tela é quem o
+   escreve. Um corte por vez, tocando o trecho escolhido do vídeo original. */
+let review = null;
+
+function renderReviewCall(snap) {
+  const pending = snap.pending_reviews || [];
+  const box = $("review-call");
+  if (!pending.length) { paint("call", box, ""); return; }
+  const first = pending[0];
+  const n = first.clips.length;
+  const extra = pending.length > 1 ? ` Há mais ${pending.length - 1} esperando depois deste.` : "";
+  paint("call", box, `
+    <div class="card call">
+      <div class="txt">
+        <h2>Escolha os cortes</h2>
+        <p>${n} corte${n > 1 ? "s" : ""} de “${esc(first.video_title || first.video_id)}”
+           ${n > 1 ? "estão" : "está"} esperando você aprovar ou descartar.
+           O Clipper só monta depois da sua decisão.${esc(extra)}</p>
+      </div>
+      <button id="rv-open">Revisar agora</button>
+    </div>`);
+  const open = $("rv-open");
+  if (open) open.onclick = () => openReview(first);
+}
+
+const currentClip = () => (review ? review.request.clips[review.current] : null);
+
+function openReview(request) {
+  review = { request, decisions: {}, current: 0, segment: 0 };
+  for (const clip of request.clips) {
+    if (clip.status === "approved" || clip.status === "rejected") review.decisions[clip.index] = clip.status;
+  }
+  $("rv-done").hidden = true;
+  $("rv-main").hidden = false;
+  $("rv-error").textContent = "";
+  $("rv-send").disabled = false;
+  $("rv-video").src = `/api/source?video=${encodeURIComponent(request.video_id)}`;
+  $("review").classList.remove("hidden");
+  showClip(0);
+}
+
+function closeReview() {
+  const video = $("rv-video");
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  $("review").classList.add("hidden");
+  review = null;
+}
+
+function showClip(position) {
+  if (!review) return;
+  const request = review.request;
+  review.current = Math.max(0, Math.min(position, request.clips.length - 1));
+  const clip = currentClip();
+  $("rv-title").textContent = request.video_title || request.video_id;
+  $("rv-counter").textContent = `corte ${review.current + 1} de ${request.clips.length} · ${request.profile}`;
+  $("rv-topic").textContent = clip.topic || "Corte sem tema";
+  $("rv-hook").textContent = clip.hook ? `“${clip.hook}”` : "";
+  $("rv-reason").textContent = clip.reason || "";
+  $("rv-text").textContent = clip.text || "sem transcrição para esse trecho";
+  playSegment(0);
+  refreshReview();
+}
+
+function playSegment(position) {
+  const clip = currentClip();
+  if (!clip) return;
+  const segment = clip.segments[position];
+  if (!segment) return;
+  review.segment = position;
+  const video = $("rv-video");
+  const jump = () => { video.currentTime = segment.start; video.play().catch(() => {}); };
+  if (video.readyState >= 1) jump();
+  else video.addEventListener("loadedmetadata", jump, { once: true });
+  const parts = clip.segments.length > 1 ? ` · parte ${position + 1} de ${clip.segments.length}` : "";
+  $("rv-range-text").textContent =
+    `trecho ${clock(segment.start)} → ${clock(segment.end)} do vídeo original${parts} · ${clock(clip.duration)} no total`;
+}
+
+$("rv-video").addEventListener("timeupdate", () => {
+  const clip = currentClip();
+  if (!clip) return;
+  const segment = clip.segments[review.segment];
+  if (!segment) return;
+  // o trecho acaba aqui: emenda no próximo ou para, em vez de seguir o vídeo inteiro
+  if ($("rv-video").currentTime >= segment.end - 0.05) {
+    if (review.segment + 1 < clip.segments.length) playSegment(review.segment + 1);
+    else $("rv-video").pause();
+  }
+});
+
+function decide(status) {
+  const clip = currentClip();
+  if (!clip) return;
+  review.decisions[clip.index] = status;
+  if (review.current < review.request.clips.length - 1) showClip(review.current + 1);
+  else refreshReview();
+}
+
+function refreshReview() {
+  if (!review) return;
+  const clip = currentClip();
+  const mine = review.decisions[clip.index];
+  $("rv-approve").classList.toggle("on", mine === "approved");
+  $("rv-reject").classList.toggle("on", mine === "rejected");
+
+  $("rv-dots").innerHTML = review.request.clips.map((c, i) => {
+    const state = review.decisions[c.index] || "";
+    const here = i === review.current ? " here" : "";
+    return `<i class="${state}${here}" data-go="${i}" title="${esc(c.topic || "corte " + c.index)}">${c.index}</i>`;
+  }).join("");
+  for (const dot of $("rv-dots").children) {
+    dot.onclick = () => showClip(Number(dot.dataset.go));
+  }
+
+  const total = review.request.clips.length;
+  const decided = Object.keys(review.decisions).length;
+  const approved = Object.values(review.decisions).filter((v) => v === "approved").length;
+  const send = $("rv-send");
+  send.disabled = decided < total;
+  send.textContent = decided < total
+    ? `Faltam ${total - decided} de ${total}`
+    : `Enviar: ${approved} aprovado${approved === 1 ? "" : "s"}, ${total - approved} descartado${total - approved === 1 ? "" : "s"}`;
+}
+
+async function sendReview() {
+  if (!review) return;
+  const request = review.request;
+  const decisions = Object.entries(review.decisions)
+    .map(([index, status]) => ({ index: Number(index), status }));
+  $("rv-send").disabled = true;
+  $("rv-error").textContent = "";
+  try {
+    const answer = await fetch("/api/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ video_id: request.video_id, profile: request.profile, decisions }),
+    });
+    const out = await answer.json();
+    if (!answer.ok || !out.ok) throw new Error(out.error || "não deu para enviar");
+    $("rv-video").pause();
+    $("rv-main").hidden = true;
+    const done = $("rv-done");
+    done.hidden = false;
+    done.innerHTML = `<b>Pronto!</b>
+      O Clipper já está montando ${out.approved} corte${out.approved === 1 ? "" : "s"}.
+      <br><br><button class="send" id="rv-finish">Fechar</button>`;
+    $("rv-finish").onclick = closeReview;
+  } catch (err) {
+    $("rv-error").textContent = String(err.message || err);
+    $("rv-send").disabled = false;
+  }
+}
+
+$("rv-approve").onclick = () => decide("approved");
+$("rv-reject").onclick = () => decide("rejected");
+$("rv-prev").onclick = () => showClip(review.current - 1);
+$("rv-next").onclick = () => showClip(review.current + 1);
+$("rv-replay").onclick = () => playSegment(0);
+$("rv-send").onclick = sendReview;
+$("rv-close").onclick = closeReview;
+document.addEventListener("keydown", (event) => {
+  if (!review || $("review").classList.contains("hidden")) return;
+  const keys = { ArrowRight: () => showClip(review.current + 1), ArrowLeft: () => showClip(review.current - 1),
+                 a: () => decide("approved"), r: () => decide("rejected") };
+  const action = keys[event.key];
+  if (action) { event.preventDefault(); action(); }
+});
+
+/* ----------------------------- pintura ---------------------------- */
+function paint(key, element, html) {
+  if (drawn[key] === html) return;
+  drawn[key] = html;
+  element.innerHTML = html;
+}
+
+function render(snap) {
+  snapshot = snap;
+  previousStep = {};
+  for (const c of allClips(snap)) previousStep[clipKey(c)] = c.node;
+  document.title = snap.running
+    ? `▶ ${snap.clips_delivered}/${snap.clips_total} · Clipper`
+    : "Clipper · acompanhar";
+  renderReviewCall(snap);
+  renderNow(snap);
+  renderAgent(snap);
+  renderJourney(snap);
+  renderClips(snap);
+  renderVideos(snap);
+  renderQueue(snap);
+  renderChannelTabs(snap);
+  renderEvals(snap);
+  renderLog(snap);
+}
+
+function connection(state, running) {
+  const pill = $("state-pill");
+  pill.className = "pill " + (state === "off" ? "off" : running ? "on" : "");
+  $("state-text").textContent = state === "off" ? "sem conexão com o Clipper"
+    : running ? "acompanhando ao vivo" : "conectado, nada rodando";
+}
+
+function connect() {
+  const stream = new EventSource("/api/events");
+  stream.onmessage = (event) => {
+    const snap = JSON.parse(event.data);
+    connection("on", snap.running);
+    render(snap);
+  };
+  stream.onerror = () => connection("off", false);
+}
+fetch("/api/snapshot").then((r) => r.json()).then((snap) => {
+  connection("on", snap.running);
+  render(snap);
+}).catch(() => connection("off", false));
+connect();
+</script>
+
+</body>
+</html>

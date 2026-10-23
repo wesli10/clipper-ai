@@ -1,0 +1,98 @@
+[project]
+name = "clipper"
+version = "0.1.0"
+description = "Personal CLI that turns YouTube videos into ready-to-publish shorts and longs"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "typer>=0.15",
+    "rich>=13.9",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "yt-dlp>=2025.1.15",
+]
+
+[project.optional-dependencies]
+# Transcription. faster-whisper uses CTranslate2, not torch: it frees VRAM when the
+# model is deleted. Install the `torch` extra as well if you want the explicit
+# torch.cuda.empty_cache() call of SPEC 2 to run.
+gpu = [
+    "faster-whisper>=1.1",
+    # CTranslate2 dlopens cuBLAS and cuDNN at runtime. They ship as wheels, not
+    # system libraries, so without them every CUDA attempt fails and the run
+    # silently demotes itself to CPU. stages/transcribe.py preloads them.
+    "nvidia-cublas-cu12>=12.4",
+    "nvidia-cudnn-cu12>=9.1,<10",
+]
+torch = [
+    "torch>=2.5",
+]
+vision = [
+    # 1.x dropped the legacy `solutions` API; video/faces.py uses the Tasks API.
+    # It already pulls opencv-contrib-python, which provides `cv2` - declaring
+    # opencv-python-headless as well installed a second copy (~290 MB).
+    "mediapipe>=1.0",
+    "numpy>=1.26",
+]
+llm = [
+    "google-genai>=0.5",
+    "httpx>=0.28",
+]
+# The agent loop (SPEC-agent 2). Claude Code as a library: it drives the
+# tool-calling loop against the `claude` CLI, which is already authenticated with
+# the subscription - SPEC 2 rules out the Anthropic API for lack of credits.
+# Only `clipper run --agent` needs it; the linear pipeline installs nothing.
+agent = [
+    "claude-agent-sdk>=0.2",
+]
+
+[project.scripts]
+clipper = "clipper.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "mypy>=1.14",
+    "ruff>=0.9",
+    "types-pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clipper"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "N", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["clipper"]
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["yt_dlp.*", "faster_whisper.*", "mediapipe.*", "cv2.*", "torch.*", "google.*", "httpx.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: real render/network tests, skipped by default",
+]
+addopts = "-m 'not slow'"

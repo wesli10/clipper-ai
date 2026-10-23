@@ -1,0 +1,43 @@
+# Um canal de publicacao (SPEC-agent 7). Copie para `channels/<seu-id>.yaml`, edite, e
+# use com `clipper run <url> --agent --channel <seu-id>`. Com um unico arquivo aqui, ele
+# e usado sem precisar do --channel.
+#
+# Este arquivo e seu: o agent le e nunca escreve. O que ele aprende vai para
+# `workspace/channels/<id>.learned.json`, que voce pode apagar inteiro sem perder nada
+# daqui.
+id: exemplo
+name: "Canal de exemplo"
+language: pt-BR
+
+# Formatos que este canal publica. O que nao esta aqui nao existe para o agent - e assim
+# que o `long` fica desligado sem ser apagado do projeto.
+profiles: [short]
+
+# So contexto para o agent dosar quantos cortes tirar de um video.
+weekly_target: {short: 5}
+
+title:
+  tone: "direto, em minusculas, sem promessa que o corte nao cumpre"
+  max_chars: 70
+  avoid:
+    - "VOCE NAO VAI ACREDITAR"
+    - "emoji no comeco"
+    - "reticencias no fim"
+  examples:
+    - "o que ninguem te conta sobre ser CLT"
+  # Vao em todo corte, garantidas pelo codigo; o modelo escreve so as do tema.
+  hashtags: ["#seucanal"]
+
+editorial:
+  prefer:
+    - "historia pessoal com desfecho"
+    - "discordancia entre os convidados"
+  avoid:
+    - "jaba e divulgacao de marca"
+    - "piada interna sem contexto"
+
+# Aplicados em toda run deste canal, por baixo do que o agent decidir para o video.
+# Mesma lista branca do agent: resolucao, fonte e cor sao do config.yaml, nao daqui.
+render_defaults:
+  short:
+    tail_roll_s: 2.0

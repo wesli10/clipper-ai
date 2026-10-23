@@ -1,0 +1,237 @@
+workspace: ./workspace
+max_source_duration: 10800        # 3 h; ingest recusa fontes maiores
+
+llm:
+  # gemini  - Gemini API (free tier); precisa de GEMINI_API_KEY no .env
+  # claude  - roda `claude -p` no seu Claude Code, usando a assinatura em vez de
+  #           creditos de API (SPEC 2/6.5). Mais forte para a decisao editorial e
+  #           sem chave, mas consome cota da assinatura e leva ~20 s por chamada.
+  # ollama  - modelo local, com janelamento; nao precisa de rede
+  # file    - grava o prompt e espera voce responder pelo /select-clips
+  provider: gemini
+  # Por estagio: a selecao e a decisao editorial e compensa o modelo mais forte;
+  # os metadados sao curtos e formulaicos e cabem no free tier da Gemini.
+  # Sao 2 chamadas de cada por video.
+  select_provider: claude
+  metadata_provider: gemini
+  # Aliases "-latest" em vez de versoes fixas: a spec (SEC 13) lista "mudanca de
+  # modelo" como risco, e os gemini-2.5-* ja foram descontinuados para contas novas.
+  # O free tier nao tem cota para os modelos "pro" (limit: 0), so para os "flash".
+  gemini_model: gemini-flash-latest
+  gemini_fallback_model: gemini-flash-lite-latest
+  ollama_model: qwen2.5:7b-instruct-q4_K_M
+  # vazio = o modelo que o proprio Claude Code estiver configurado para usar
+  claude_model: ""
+
+transcribe:
+  # Medido em 41:56 de audio numa RTX 4060 (2026-09-09):
+  #   large-v3        6min44s
+  #   large-v3-turbo  1min58s   (3,4x)
+  # A diferenca de texto entre os dois e de 13% das palavras - mas duas rodadas
+  # do proprio turbo no mesmo audio ja diferem em 10%, entao quase tudo isso e
+  # variacao de execucao, nao perda de qualidade. O que o pipeline usa de fato
+  # nao mudou: 99,7% das frases com pontuacao nos dois, e a mesma proporcao de
+  # finais que fecham assunto (76% x 76%).
+  # O custo real: 2,2% das palavras saem com duracao <= 0 contra 1,5% no
+  # large-v3, e essas sao descartadas da legenda queimada.
+  model: large-v3-turbo
+  # Se um dia a legenda comecar a perder palavras demais, e so voltar para
+  # large-v3 aqui; nada mais no pipeline depende do modelo.
+  fallback_model: large-v3
+  compute_type: int8_float16
+  language: auto
+
+render:
+  # Qualidade do arquivo entregue. A spec pede 18 (praticamente sem perdas); 21
+  # reduz bastante o arquivo e o tempo de upload, e as plataformas reencodam tudo.
+  crf: 21
+  # Qualidade das etapas intermediarias (corte e juncao), que o encode final
+  # reencoda. Manter alto evita perda acumulada - ver render.intermediate_crf.
+  intermediate_crf: 16
+  preset: medium
+
+review:
+  # Como decidir quais cortes vao para o render:
+  #   ask  - pergunta no terminal (padrao do `clipper run`)
+  #   auto - aprova os melhores pela nota (padrao do `clipper batch`)
+  #   web  - a pipeline para e espera voce decidir na pagina do `clipper monitor`,
+  #          com o trecho tocando direto do video original
+  mode: ask
+  # Quanto tempo a pipeline espera a sua decisao no modo web antes de desistir.
+  timeout_s: 3600
+
+monitor:
+  # Onde o `clipper monitor` sobe, e o endereco que a pipeline mostra quando
+  # para para esperar a revisao.
+  host: 127.0.0.1
+  port: 8787
+
+profiles:
+  default: [short, long]
+
+  short:
+    n_clips: 5
+    # Nota minima. O modelo pontua os proprios cortes; abaixo disso ele esta
+    # enchendo a lista para bater a cota. Qualidade acima de quantidade: e melhor
+    # sair com 2 cortes bons do que com 5 sendo 3 medianos.
+    min_score: 78
+    # O que o perfil chama de duracao e a FALA; o arquivo entregue sai maior:
+    # arquivo = fala + tail_roll_s + 3,7s (card de 4,0s menos o crossfade de 0,3s).
+    # Com tail_roll 3, um corte bom de 40 a 70s na tela e 30 a 63s de fala.
+    duration_min: 25              # piso e regra de rejeicao, nao meta: acima disso o
+                                  # modelo estica corte curto em vez de descartar, e
+                                  # corte esticado abre com jargao (visto na 1a run)
+    duration_target: 50           # a mira que vai no prompt; ~57s de arquivo
+    duration_max: 63              # teto de verdade; ~70s de arquivo
+    output_width: 1080
+    output_height: 1920
+    fps: 30
+    # letterbox: quadro 16:9 inteiro, centralizado, com barras. Nao perde nada da
+    # imagem - importante quando ha varias pessoas ou graficos na tela. O corte
+    # central (`center`) enquadra melhor uma pessoa so, mas descarta ~68% da
+    # largura. `blur` tem a mesma geometria com o fundo desfocado no lugar das
+    # barras, e `face` rastreia o rosto (custa uma passada de deteccao no video).
+    # blur: quadro 16:9 inteiro sobre o proprio video desfocado e escurecido.
+    # Nao perde imagem (importante com varias pessoas ou graficos na tela) e o
+    # fundo rebaixado mantem a legenda legivel. `letterbox` da o mesmo
+    # enquadramento com barras lisas; `center` preenche a tela mas descarta ~68%
+    # da largura; `face` rastreia o rosto e custa uma passada de deteccao.
+    reframe: blur
+    blur_brightness: -0.30
+    blur_saturation: 0.6
+    zoom: none                    # punch_in quando a fase 11 estiver pronta
+    # Pergunta para o espectador responder nos comentarios, escrita na barra
+    # acima da imagem durante o corte inteiro. So aparece quando o modelo
+    # escreve uma (`comment_prompt`) e quando ha barra - ou seja, com `blur` e
+    # `letterbox`. Com `center` ou `face` a tela e toda imagem e o texto cairia
+    # em cima de alguem, entao nao e desenhado.
+    banner:
+      enabled: true
+      size_pct: 0.032             # altura do texto, fracao da altura do video
+      max_chars_per_line: 26
+      uppercase: true
+    subtitle_style: karaoke
+    # Card colado no fim do corte. E um video pronto: nao passa pelo reframe,
+    # zoom nem legenda, so e normalizado para 1080x1920/30fps (com faixa de
+    # audio silenciosa se nao tiver) e juntado com o mesmo crossfade de 0,3s.
+    # Nao encurta o corte - um corte de 30s vira um arquivo de 34s.
+    # Pensa duas vezes antes de ligar no short: o Shorts pesa porcentagem
+    # assistida, e 4s de card num corte de 30 derrubam a conclusao de 100%
+    # para ~88%. No long e padrao e nao custa nada.
+    # Passarela: segundos de video que continuam rodando depois da ultima frase
+    # do corte, so para a entrada do card nao ser um corte seco. O fim escolhido
+    # pelo modelo nao muda - a legenda para nele, e a fala que comecar aqui fica
+    # sem legenda de proposito, porque e ambiencia e nao continuacao do assunto.
+    tail_roll_s: 3
+    # outro: ./assets/outro-short.mp4   # opcional: caminho para um card de video seu
+    subtitle:
+      font: Montserrat ExtraBold
+      size: 72
+      primary_color: "#FFFFFF"
+      highlight_color: "#FFD400"
+      outline: 4
+      vertical_pos_pct: 0.70
+      max_words_per_line: 4
+      max_chars_per_line: 22
+
+  long:
+    n_clips: 2
+    min_score: 78
+    duration_min: 120
+    duration_max: 480
+    duration_target: 240
+    multi_segment: true
+    max_segments: 4
+    boundary_mode: topic
+    output_width: 1920
+    output_height: 1080
+    fps: 30
+    reframe: none
+    zoom: none
+    # Sem legenda queimada nos longs: em 16:9 o espectador esta no desktop ou na
+    # TV com som, e o YouTube ja gera legenda automatica que ele liga se quiser.
+    # No short e o oposto - o feed toca mudo por padrao, e sem legenda o corte
+    # nao se entende. Voltar e trocar por `classic` aqui.
+    subtitle_style: "off"     # entre aspas: YAML le `off` sem aspas como booleano
+    # O card 16:9 - precisa ser um arquivo diferente do outro do short, porque
+    # o Veo so gera 16:9 ou 9:16 e um so entraria esticado em metade dos cortes.
+    tail_roll_s: 3
+    # outro: ./assets/outro-long.mp4     # opcional: caminho para um card de video seu
+    subtitle:
+      font: Montserrat SemiBold
+      size: 44
+      primary_color: "#FFFFFF"
+      box_color: "#00000099"
+      vertical_pos_pct: 0.90
+      max_chars_per_line: 42
+      max_lines: 2
+
+  # Para fontes longas (podcast de 1-3 h), onde um assunto rende 10-20 min e ha
+  # muito mais momentos aproveitaveis do que num video de 20 min.
+  # Uso: clipper run <url> --profile short_podcast,podcast
+  podcast:
+    extends: long
+    n_clips: 4
+    duration_min: 300           # 5 min
+    duration_target: 720        # 12 min
+    duration_max: 1200          # 20 min
+    max_segments: 3             # menos costura: um assunto longo tende a ser continuo
+
+  short_podcast:
+    extends: short
+    n_clips: 12                 # 2 h rendem muito mais que 5 momentos
+    duration_max: 180           # Shorts do YouTube aceitam ate 3 min
+
+  # Formato pergunta-e-revelacao: corta na pergunta, congela o quadro com um
+  # card por alguns segundos e so entao mostra a resposta. Nao entra no
+  # `default` porque nem todo video tem esse tipo de momento - o modelo devolve
+  # lista vazia quando nao tem, e isso e uma resposta valida.
+  # Uso: clipper run <url> --profile short,quiz
+  quiz:
+    n_clips: 3
+    min_score: 78
+    # Quanto tempo o quadro fica congelado no card. Abaixo de ~2s o espectador
+    # nao chega a formular o palpite; acima de ~3s ele desliza para o proximo.
+    card_seconds: 2.4
+    # Minimo de pergunta antes e de resposta depois da pausa.
+    card_min_part_s: 3.0
+    card:
+      dim: 0.75                 # opacidade do preto sobre o quadro congelado
+      size_pct: 0.055           # altura do texto, fracao da altura do video
+      vertical_pos_pct: 0.42
+      max_chars_per_line: 18
+      countdown: true           # 3, 2, 1 ate a revelacao
+
+  # exemplo de perfil custom: long vertical
+  # long_vertical:
+  #   extends: long
+  #   output_width: 1080
+  #   output_height: 1920
+  #   reframe: blur
+
+deliver:
+  # rclone: envia por API, sem depender do cliente do Windows nem de montar unidade
+  # no WSL. Exige um remote chamado `gdrive` (veja o README).
+  mode: rclone
+  rclone_remote: "gdrive:"
+  # so usado quando mode: folder
+  drive_root: "~/Google Drive/My Drive"
+  folder_names: {short: shorts, long: longs}
+
+publish:
+  # A fila (SPEC 8.1). `Clipper/publicar/<dia>/<destino>/` leva os videos daquele
+  # dia e um PUBLICAR.md do lado; o historico por video fica em `Clipper/arquivo`
+  # (metadados, thumbnail, INDEX.md) e nada e publicado de la.
+  queue_folder: publicar
+  archive_folder: arquivo
+  per_day: 4                 # shorts por dia
+  long_every_days: 7         # um long por semana
+  daily_profiles: [short]
+  # Onde cada corte vai. A chave mais especifica vence:
+  # <canal>/<perfil>, <canal>, default/<perfil>, default. O canal e o da origem,
+  # como aparece na pasta do arquivo.
+  destinations:
+    default: [tiktok]                # canal de cortes em geral, so TikTok
+    default/long: []                 # long de outro canal nao e publicado: vai para sem-destino/
+    example-channel: [youtube, tiktok]
+    example-channel/long: [youtube]    # long 16:9 nao vai para o TikTok
